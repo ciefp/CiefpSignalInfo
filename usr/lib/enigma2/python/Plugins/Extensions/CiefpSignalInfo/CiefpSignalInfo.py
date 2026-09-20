@@ -76,7 +76,7 @@ class CiefpSignalInfoScreen(Screen):
                 foregroundColor="#00FF00" backgroundColor="#0D1B36"
                 transparent="1" />
         <widget name="satellite_name" position="1450,850" size="380,40"
-                font="Bold;24" halign="left" valign="center"
+                font="Console;24" halign="left" valign="center"
                 foregroundColor="#00FF00" transparent="1" />
         <widget name="separator2" position="0,890" size="1920,3" backgroundColor="#d5fa02" zPosition="1" />
         <widget name="key_red" position="1600,610" size="300,40" 
