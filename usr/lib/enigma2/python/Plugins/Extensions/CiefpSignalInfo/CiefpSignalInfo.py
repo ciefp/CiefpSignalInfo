@@ -19,7 +19,7 @@ except ImportError as e:
     HAS_PICON_MANAGER = False
     print(f"[CiefpSignalInfo] Local PiconManager NOT available: {e}")
 
-VERSION = "1.5"
+VERSION = "1.6"
 PLUGIN_PATH = "/usr/lib/enigma2/python/Plugins/Extensions/CiefpSignalInfo"
 
 # ==== Satfinder putanje ====
@@ -39,7 +39,7 @@ class CiefpSignalInfoScreen(Screen):
         <widget source="Title" render="Label" position="0,20" size="1520,70"
                 font="Regular;52" halign="center" valign="center"
                 foregroundColor="#FFFFFF" transparent="1" />
-        <widget name="separator3" position="1550,70" size="3,820" backgroundColor="#d5fa02" zPosition="1" />
+        <widget name="separator3" position="1550,70" size="3,770" backgroundColor="#d5fa02" zPosition="1" />
         <widget name="time_label" position="1600,75" size="320,50"
                 font="Regular;46" halign="center" valign="center"
                 foregroundColor="#FFFFFF" transparent="1" />
@@ -66,25 +66,26 @@ class CiefpSignalInfoScreen(Screen):
                 font="Bold;36" halign="center" valign="center"
                 foregroundColor="#00FF00" transparent="1" />
 
-        <widget name="ca_info" position="1580,400" size="340,100"
-                font="Bold;32" halign="left" valign="center"
-                foregroundColor="#00FF00" transparent="1" />
-
-        <widget name="plugin_logo" position="1600,500" size="300,200"
+        <widget name="plugin_logo" position="1600,400" size="300,200"
                 pixmap="/usr/lib/enigma2/python/Plugins/Extensions/CiefpSignalInfo/plugin_logo.png"
                 alphatest="blend" transparent="1" />
-
-        <widget name="key_red" position="1600,710" size="300,40" 
-                backgroundColor="red" font="Bold;24" foregroundColor="#000000"  halign="center" valign="center" />
-        <widget name="key_green" position="1600,770" size="300,40" 
-                backgroundColor="green" font="Bold;24" foregroundColor="#000000"  halign="center" valign="center" />
-        <widget name="key_blue" position="1600,830" size="300,40" 
-                backgroundColor="blue" font="Bold;24" foregroundColor="#000000"  halign="center" valign="center" />  
+        <widget name="separator4" position="0,840" size="1920,3" backgroundColor="#d5fa02" zPosition="1" />
+         <!-- === ECM STATUS TRAKA === -->
+        <widget name="ecm_status" position="50,850" size="1400,40"
+                font="Console;24" halign="left" valign="center"
+                foregroundColor="#00FF00" backgroundColor="#0D1B36"
+                transparent="1" />
+        <widget name="satellite_name" position="1450,850" size="380,40"
+                font="Bold;24" halign="left" valign="center"
+                foregroundColor="#00FF00" transparent="1" />
         <widget name="separator2" position="0,890" size="1920,3" backgroundColor="#d5fa02" zPosition="1" />
+        <widget name="key_red" position="1600,610" size="300,40" 
+                backgroundColor="red" font="Bold;24" foregroundColor="#000000"  halign="center" valign="center" />
+        <widget name="key_green" position="1600,670" size="300,40" 
+                backgroundColor="green" font="Bold;24" foregroundColor="#000000"  halign="center" valign="center" />
+        <widget name="key_blue" position="1600,730" size="300,40" 
+                backgroundColor="blue" font="Bold;24" foregroundColor="#000000"  halign="center" valign="center" /> 
         
-        <widget name="satellite_name" position="1560,980" size="380,60"
-                font="Bold;30" halign="center" valign="left"
-                foregroundColor="#FFD700" transparent="1" />
         <widget name="snr_label" position="40,910" size="120,60"
                 font="Bold;44" halign="left" valign="center"
                 foregroundColor="#FFD700" transparent="1" />
@@ -119,7 +120,7 @@ class CiefpSignalInfoScreen(Screen):
         self["info_right"]   = Label("")
 
         self["plugin_title"] = Label("..:: Ciefp Signal Info ::..")
-
+        self["ecm_status"] = Label("")
         self["key_red"] = Label("EXIT")
         self["key_blue"] = Label("MINI SKIN")
         self["key_green"] = Label("SATFINDER")
@@ -143,6 +144,7 @@ class CiefpSignalInfoScreen(Screen):
         self["separator1"] = Label()
         self["separator2"] = Label()
         self["separator3"] = Label()
+        self["separator4"] = Label()
 
         self["actions"] = ActionMap(
             ["OkCancelActions", "ColorActions"],
@@ -211,10 +213,12 @@ class CiefpSignalInfoScreen(Screen):
             self["ca_info"].setText(self.getCAInfoShort())
             self["satellite_name"].setText(self.getSatelliteNameShort())
 
+            # === NOVO: ECM Status ===
+            self["ecm_status"].setText(self.getECMStatusText())
+
             self.updatePicon()
         except Exception as e:
             print("[CiefpSignalInfo] updateAllInfo error:", e)
-
     # ---------------- SIGNAL BARS ----------------
     def updateSignalBars(self, snr_percent, snr_db, agc):
         try:
@@ -720,6 +724,144 @@ class CiefpSignalInfoScreen(Screen):
         except Exception as e:
             print(f"[CiefpSignalInfo] _generate_picon_variants error: {e}")
             return variants
+    # ---------------- ECM INFO ----------------
+    def get_ecm_info(self):
+        """Parsira /tmp/ecm.info i vraća dict sa podacima.
+        Podržava različite formate emulatora (OSCam, NCam, CCcam, mgcamd, itd.)
+        """
+        ecm_path = "/tmp/ecm.info"
+        ecm_data = {
+            "system": "N/A",
+            "caid": "N/A",
+            "provider": "N/A",
+            "provid": "N/A",
+            "pid": "N/A",
+            "chid": "N/A",
+            "reader": "N/A",
+            "from": "N/A",
+            "address": "N/A",
+            "using": "N/A",
+            "protocol": "N/A",
+            "hops": "N/A",
+            "ecm_time": "N/A",
+            "cw0": "N/A",
+            "cw1": "N/A"
+        }
+        if os.path.exists(ecm_path):
+            try:
+                with open(ecm_path, "r") as f:
+                    for line in f:
+                        line = line.strip()
+                        if ":" not in line:
+                            continue
+                        key, value = line.split(":", 1)
+                        key = key.strip().lower()
+                        value = value.strip()
+
+                        # === CA SYSTEM ===
+                        if key == "system":
+                            ecm_data["system"] = value
+
+                        # === CAID ===
+                        elif key == "caid":
+                            ecm_data["caid"] = value.replace("0x", "").upper()
+
+                        # === PROVIDER ===
+                        elif key == "provider":
+                            ecm_data["provider"] = value
+
+                        # === PROVID ===
+                        elif key == "provid":
+                            ecm_data["provid"] = value.replace("0x", "").upper()
+
+                        # === PID ===
+                        elif key == "pid":
+                            ecm_data["pid"] = value
+
+                        # === CHID ===
+                        elif key in ("chid", "channel"):
+                            ecm_data["chid"] = value
+
+                        # === READER ===
+                        elif key in ("reader", "source", "src", "card", "cardid"):
+                            ecm_data["reader"] = value
+
+                        # === FROM ===
+                        elif key in ("from", "host", "ip"):
+                            ecm_data["from"] = value
+
+                        # === ADDRESS ===
+                        elif key == "address":
+                            ecm_data["address"] = value
+                            # Ako `from` nije popunjen, koristi address
+                            if ecm_data["from"] == "N/A":
+                                ecm_data["from"] = value
+
+                        # === USING (protocol) ===
+                        elif key == "using":
+                            ecm_data["using"] = value
+                            # Ako `protocol` nije popunjen, koristi using
+                            if ecm_data["protocol"] == "N/A":
+                                ecm_data["protocol"] = value
+
+                        # === PROTOCOL ===
+                        elif key in ("protocol", "proto"):
+                            ecm_data["protocol"] = value
+
+                        # === HOPS ===
+                        elif key in ("hops", "hop", "level"):
+                            ecm_data["hops"] = value
+
+                        # === ECM TIME ===
+                        elif key in ("ecm time", "ecm_time", "time", "ecm"):
+                            ecm_data["ecm_time"] = value
+
+                        # === CW ===
+                        elif key == "cw0":
+                            ecm_data["cw0"] = value
+                        elif key == "cw1":
+                            ecm_data["cw1"] = value
+            except Exception as e:
+                print(f"[CiefpSignalInfo] Error reading ecm.info: {str(e)}")
+        return ecm_data
+    def getECMStatusText(self):
+        """Vraća formatiran string za status traku."""
+        try:
+            ecm = self.get_ecm_info()
+
+            # Ako nema aktivnog ECM-a
+            if ecm["caid"] == "N/A" and ecm["hops"] == "N/A":
+                return ""
+
+            parts = []
+
+            # Protocol (CCcam, OSCam, itd.)
+            if ecm["using"] and ecm["using"] != "N/A":
+                parts.append(f"Using: {ecm['using']}")
+
+            # Address (server adresa)
+            if ecm["address"] and ecm["address"] != "N/A":
+                parts.append(f"Address: {ecm['address']}")
+
+            # Hops
+            if ecm["hops"] and ecm["hops"] != "N/A":
+                parts.append(f"Hops: {ecm['hops']}")
+
+            # ECM Time
+            if ecm["ecm_time"] and ecm["ecm_time"] != "N/A":
+                parts.append(f"ECM Time: {ecm['ecm_time']}")
+
+            # CA System + CAID
+            if ecm["caid"] and ecm["caid"] != "N/A":
+                caid_str = f"CAID: 0x{ecm['caid']}"
+                if ecm["system"] and ecm["system"] != "N/A":
+                    caid_str = f"{ecm['system']} (0x{ecm['caid']})"
+                parts.append(caid_str)
+
+            return "  |  ".join(parts)
+        except Exception as e:
+            print(f"[CiefpSignalInfo] getECMStatusText error: {e}")
+            return ""
 
     # ---------------- POMOĆNE ----------------
     def getServiceReference(self):
