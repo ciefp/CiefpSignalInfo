@@ -7,7 +7,7 @@ def main(session, **kwargs):
 def Plugins(**kwargs):
     return [
         PluginDescriptor(
-            name="Ciefp Signal Info 1.6",
+            name="Ciefp Signal Info 1.7",
             description="Signal and channel information",
             where=PluginDescriptor.WHERE_PLUGINMENU,
             icon="icon_plugin.png",

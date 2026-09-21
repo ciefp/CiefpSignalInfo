@@ -19,7 +19,7 @@ except ImportError as e:
     HAS_PICON_MANAGER = False
     print(f"[CiefpSignalInfo] Local PiconManager NOT available: {e}")
 
-VERSION = "1.6"
+VERSION = "1.7"
 PLUGIN_PATH = "/usr/lib/enigma2/python/Plugins/Extensions/CiefpSignalInfo"
 
 # ==== Satfinder putanje ====
@@ -39,7 +39,7 @@ class CiefpSignalInfoScreen(Screen):
         <widget source="Title" render="Label" position="0,20" size="1520,70"
                 font="Regular;52" halign="center" valign="center"
                 foregroundColor="#FFFFFF" transparent="1" />
-        <widget name="separator3" position="1550,70" size="3,770" backgroundColor="#d5fa02" zPosition="1" />
+        <widget name="separator3" position="1550,70" size="3,750" backgroundColor="#d5fa02" zPosition="1" />
         <widget name="time_label" position="1600,75" size="320,50"
                 font="Regular;46" halign="center" valign="center"
                 foregroundColor="#FFFFFF" transparent="1" />
@@ -69,43 +69,45 @@ class CiefpSignalInfoScreen(Screen):
         <widget name="plugin_logo" position="1600,400" size="300,200"
                 pixmap="/usr/lib/enigma2/python/Plugins/Extensions/CiefpSignalInfo/plugin_logo.png"
                 alphatest="blend" transparent="1" />
-        <widget name="separator4" position="0,840" size="1920,3" backgroundColor="#d5fa02" zPosition="1" />
+        <widget name="separator4" position="0,820" size="1920,3" backgroundColor="#d5fa02" zPosition="1" />
          <!-- === ECM STATUS TRAKA === -->
-        <widget name="ecm_status" position="50,850" size="1350,40"
+        <widget name="ecm_status" position="50,830" size="1850,40"
                 font="Console;24" halign="left" valign="center"
                 foregroundColor="#00FF00" backgroundColor="#0D1B36"
                 transparent="1" />
-        <widget name="satellite_name" position="1400,850" size="520,40"
-                font="Console;22" halign="left" valign="center"
+        <widget name="satellite_name" position="50,880" size="520,40"
+                font="Console;24" halign="left" valign="center"
                 foregroundColor="#00FF00" transparent="1" />
-        <widget name="separator2" position="0,890" size="1920,3" backgroundColor="#d5fa02" zPosition="1" />
+        <widget name="separator2" position="0,920" size="1920,3" backgroundColor="#d5fa02" zPosition="1" />
         <widget name="key_red" position="1600,610" size="300,40" 
                 backgroundColor="red" font="Bold;24" foregroundColor="#000000"  halign="center" valign="center" />
-        <widget name="key_green" position="1600,670" size="300,40" 
+        <widget name="key_green" position="1600,660" size="300,40" 
                 backgroundColor="green" font="Bold;24" foregroundColor="#000000"  halign="center" valign="center" />
-        <widget name="key_blue" position="1600,730" size="300,40" 
+        <widget name="key_yellow" position="1600,710" size="300,40" 
+                backgroundColor="yellow" font="Bold;24" foregroundColor="#000000"  halign="center" valign="center" /> 
+        <widget name="key_blue" position="1600,760" size="300,40" 
                 backgroundColor="blue" font="Bold;24" foregroundColor="#000000"  halign="center" valign="center" /> 
         
-        <widget name="snr_label" position="40,910" size="120,60"
-                font="Bold;44" halign="left" valign="center"
+        <widget name="snr_label" position="40,940" size="120,50"
+                font="Bold;36" halign="left" valign="center"
                 foregroundColor="#FFD700" transparent="1" />
-        <widget name="snr_bar" position="180,910" size="1180,50"
+        <widget name="snr_bar" position="180,940" size="1180,40"
                 pixmap="/usr/lib/enigma2/python/Plugins/Extensions/CiefpSignalInfo/icon_snr.png"
                 borderWidth="2" borderColor="#000000" />
-        <widget name="snr_value" position="1380,910" size="180,60"
+        <widget name="snr_value" position="1380,940" size="180,50"
                 font="Bold;46" halign="center" valign="center"
                 foregroundColor="#FFD700" transparent="1" />
-        <widget name="snr_db" position="1560,910" size="340,60"
+        <widget name="snr_db" position="1560,940" size="340,50"
                 font="Bold;46" halign="center" valign="center"
                 foregroundColor="#00FF00" transparent="1" />
 
-        <widget name="agc_label" position="40,980" size="120,50"
+        <widget name="agc_label" position="40,990" size="120,50"
                 font="Bold;44" halign="left" valign="center"
                 foregroundColor="#FFD700" transparent="1" />
-        <widget name="agc_bar" position="180,980" size="1180,50"
+        <widget name="agc_bar" position="180,990" size="1180,40"
                 pixmap="/usr/lib/enigma2/python/Plugins/Extensions/CiefpSignalInfo/icon_agc.png"
                 borderWidth="2" borderColor="#000000" />
-        <widget name="agc_value" position="1380,980" size="180,60"
+        <widget name="agc_value" position="1380,990" size="180,50"
                 font="Bold;46" halign="center" valign="center"
                 foregroundColor="#FFD700" transparent="1" />
     </screen>
@@ -123,6 +125,7 @@ class CiefpSignalInfoScreen(Screen):
         self["ecm_status"] = Label("")
         self["key_red"] = Label("EXIT")
         self["key_blue"] = Label("MINI SKIN")
+        self["key_yellow"] = Label("PLACEHOLDER")
         self["key_green"] = Label("SATFINDER")
 
         self["channel_picon"] = Pixmap()
@@ -153,6 +156,7 @@ class CiefpSignalInfoScreen(Screen):
                 "cancel": self.close,
                 "red": self.close,
                 "green": self.openSatfinder,   # ← NOVO
+                "yellow": self.close,
                 "blue": self.openMiniInfo,
             },
             -2
